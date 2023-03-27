@@ -23,10 +23,11 @@ int main(int argc, char *argv[]) {
   
    printf("Finished,,, exiting\n");
 */
-   printf("hello world\n");
+   printf("Hello World\n");
    initialize_display();
-   while (1);		 
-   return 0;
+   display_driver();
+   display_exit();
 
+   return 1;
 
 }
