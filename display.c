@@ -27,8 +27,10 @@ void initialize_display(){
    Background = NULL;
    Screen     = NULL;
    
-   X = 640;
-   Y = 480;
+//   X = 640;
+//   Y = 480;
+   X = 720;
+   Y = 1280;
    Framerate = 30;
 
    if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {

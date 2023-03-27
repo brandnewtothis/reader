@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "extract.h"
+#include "text.h"
 #include "display.h"
 
 #define MAXROWS 5000

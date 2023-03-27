@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "text.h"
 
 void extract_text(char *fname, char **text, int *rows, int *cols){
    FILE *fptr;
