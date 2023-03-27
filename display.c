@@ -50,7 +50,8 @@ void initialize_display(){
 
    Screen = SDL_LoadBMP("img/hello.bmp");
    Background = SDL_CreateTextureFromSurface(Renderer,Screen);
-   SDL_Delay(2000);
+   SDL_FreeSurface(Screen);
+//   SDL_Delay(2000);
 
 }
 
@@ -67,6 +68,10 @@ void display_driver(){
 
 	 }
       }
+
+      SDL_RenderClear(Renderer);
+      SDL_RenderCopy(Renderer,Background,NULL,NULL);
+      SDL_RenderPresent(Renderer);
 
    }
 }
