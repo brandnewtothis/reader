@@ -26,9 +26,10 @@ int main(int argc, char *argv[]) {
 */	
    printf("Hello World\n");
  
-   initialize_display();
+   initialize_display(); 
+   initialize_dialogText();
    display_driver();
-   display_exit();
+   display_shutdown();
 
    return 1;
 
