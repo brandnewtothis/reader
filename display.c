@@ -21,6 +21,7 @@ typedef struct {
     SDL_Rect console;
     Uint8 r, g, b, a; //Color and alpha of console
     TTF_Font *font;
+    Uint8 fontSize;
     SDL_Color fontColor;
 } Dialog_box;
 
@@ -89,13 +90,13 @@ void initialize_display(){
    //Sets transparency to Renderer
    SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
 
-
 }
 
 void initialize_dialogText(){
    //Text Color for System
    Dialog.font = NULL;
-   Dialog.fontColor.r = 0; Dialog.fontColor.g = 0;Dialog.fontColor.b = 0;
+   Dialog.fontColor.r = 255; Dialog.fontColor.g = 255; Dialog.fontColor.b = 255;
+   Dialog.fontSize = 12;
 
    if (TTF_Init() < 0) {
       printf("error initializing SDL_ttf: %s\n", TTF_GetError());
@@ -104,33 +105,17 @@ void initialize_dialogText(){
 
    // Load font file
    #ifdef __linux__
-   Dialog.font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf", 24);
+   Dialog.font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf", Dialog.fontSize);
    #elif __APPLE__
-   Dialog.font = TTF_OpenFont("/Library/Fonts/Arial.ttf", 24);
+   Dialog.font = TTF_OpenFont("/Library/Fonts/Arial.ttf", Dialog.fontSize);
    #elif _WIN32
-   Dialog.font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 24);
+   Dialog.font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", Dialog.fontSize);
    #endif
 	
    if (Dialog.font == NULL) { 
       printf("error loading font file: %s\n", TTF_GetError());
       exit(-1);
    }
-
-   Dialog.fontColor.r = 220; Dialog.fontColor.g = 220; Dialog.fontColor.b = 220;
-
-   // Create a surface with text
-   SDL_Surface* text_surface = TTF_RenderText_Blended(Dialog.font,"Hello World",Dialog.fontColor);
-	
-   //Create a texture from the surface  
-   SDL_Texture* text_texture = SDL_CreateTextureFromSurface(Renderer, text_surface);
-   // Render the texture onto the Dialogue.console 
-   SDL_Rect text_rect = { Dialog.console.x + 10, Dialog.console.y + 10, 0, 0 };
-   SDL_QueryTexture(text_texture, NULL, NULL, &text_rect.w, &text_rect.h);
-   SDL_RenderCopy(Renderer, text_texture, NULL, &text_rect);
-
-   // Clean up resources 
-//   SDL_FreeSurface(text_surface);
-//   SDL_DestroyTexture(text_texture);
 }
 
 
@@ -145,12 +130,18 @@ void display_driver(){
    SDL_SetRenderDrawColor(Renderer, 30, 30, 30, 140);
    SDL_RenderFillRect(Renderer, &Dialog.console);
 
+   //draw text
+   SDL_Surface *text_surface = TTF_RenderText_Blended(Dialog.font, "Hello world!",Dialog.fontColor);
+   SDL_Texture *text_texture = SDL_CreateTextureFromSurface(Renderer,text_surface);
+   SDL_RenderCopy(Renderer,text_texture,NULL,NULL);
+
+   SDL_FreeSurface(text_surface);
+   SDL_DestroyTexture(text_texture);
+
    //Show 
    SDL_RenderPresent(Renderer);
 
 //   Uint32 lastTick = SDL_GetTicks();
-
-   //char *texts[] = { "Hello", "World", "How", "Are", "You?" };
 
    //Main Driver
    while (running){
@@ -188,11 +179,13 @@ void display_shutdown(){
 
    if(Dialog.font){
       TTF_CloseFont(Dialog.font);
+
    }
 
    if(Window){
       SDL_DestroyWindow(Window);
    }
 
+   TTF_Quit();
    SDL_Quit();
 }
