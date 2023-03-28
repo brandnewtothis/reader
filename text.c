@@ -31,13 +31,11 @@ void extract_text(char *fname, char **text, int *rows, int *cols){
 }
 
 void closeText(char **text,int *rows){
-   for(int i = 0;i<*rows-1;i++){
+   for(int i = 0;i<*rows;i++){
       printf("%s",text[i]);
 
-      if(i == *rows-2){
-        printf("\n");
-      }
 
       free(text[i]);
    }
+
 }

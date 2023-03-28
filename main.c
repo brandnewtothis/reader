@@ -18,12 +18,14 @@ int main(int argc, char *argv[]) {
 
 
    extract_text(fName,text,&rows,&cols);
-
    closeText(text,&rows);
+
   
    printf("Finished,,, exiting\n");
-*/
+
+*/	
    printf("Hello World\n");
+ 
    initialize_display();
    display_driver();
    display_exit();
