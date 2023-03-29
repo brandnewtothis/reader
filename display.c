@@ -7,9 +7,10 @@
 //for using sdl_delay() functions
 #include <SDL2/SDL_timer.h>
 
+#include <SDL2/SDL2_gfxPrimitives.h>
+
 //Text
 #include <SDL_ttf.h>
-
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -25,39 +26,40 @@ typedef struct {
     SDL_Color fontColor;
 } Dialog_box;
 
-SDL_Window   *Window;
-SDL_Renderer *Renderer;
-SDL_Texture  *Background;
-SDL_Surface  *Screen;
+//Screen
+typedef struct{
+   SDL_Renderer *renderer;
+   SDL_Texture  *background;
+   SDL_Texture  *text;
+   SDL_Surface  *surface;
+} Screen;
 
 int Width;
 int Height;
-int Framerate;
+SDL_Window *Window;
 
 Dialog_box Dialog;
+Screen Main_screen;
 
 void initialize_display(){
-
    //Basic Stuff
-   Window     = NULL; 
-   Renderer   = NULL;
-   Background = NULL;
-   Screen     = NULL;
+   Window                 = NULL; 
+   Main_screen.renderer   = NULL;
+   Main_screen.background = NULL;
+   Main_screen.surface    = NULL;
 
    //Ui Elems
    //Console, where text should display on
    Dialog.console.x = 0; Dialog.console.y = 0;
    Dialog.console.w = 0; Dialog.console.h = 0;
 
-   Width = 640;
-   Height = 480;
-   Framerate = 30;
+   //Window Dimensions
+   Width = 640; Height = 480;
 
    if (SDL_Init(SDL_INIT_VIDEO) == -1) {
       printf("error initializing SDL: %s\n", SDL_GetError());
       exit(1);
    }
-
 
    Window = SDL_CreateWindow("Reader - WIP",
                               SDL_WINDOWPOS_CENTERED,
@@ -69,34 +71,28 @@ void initialize_display(){
       exit(1);
    }
 
-   Renderer = SDL_CreateRenderer(Window, -1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); //Graphics card does rendering
+   //Graphics card does rendering
+   Main_screen.renderer = SDL_CreateRenderer(Window, -1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); 
 
-   Screen = IMG_Load("img/default.png");
-   Background = SDL_CreateTextureFromSurface(Renderer,Screen);
-   
-   SDL_SetTextureColorMod(Background, 100, 100, 100);  //Darken Background
-
-   int console_width =  (int)(0.85 * Width);
-   int console_height = (int)(0.85 * Height);
-
-   // calculate the position of the top-left corner of the rectangle
-   int console_x = (int)((Width - console_width) / 2);
-   int console_y = (int)((Height - console_height) / 2);
-
-   // set console location
-   Dialog.console.x = console_x; Dialog.console.y = console_y;
-   Dialog.console.w = console_width; Dialog.console.h = console_height;
-
+   //Load Background texture 
+   Main_screen.surface = IMG_Load("img/default.png");
+   Main_screen.background = SDL_CreateTextureFromSurface(Main_screen.renderer,Main_screen.surface);
+   //Darken Background
+   SDL_SetTextureColorMod(Main_screen.background, 170, 170, 170);  
    //Sets transparency to Renderer
-   SDL_SetRenderDrawBlendMode(Renderer, SDL_BLENDMODE_BLEND);
+   SDL_SetRenderDrawBlendMode(Main_screen.renderer, SDL_BLENDMODE_BLEND);  
+
+   update_console();
 
 }
 
 void initialize_dialogText(){
    //Text Color for System
    Dialog.font = NULL;
+   //White text
    Dialog.fontColor.r = 255; Dialog.fontColor.g = 255; Dialog.fontColor.b = 255;
-   Dialog.fontSize = 12;
+   //TODO Adjust fontsize based on screen resolution
+   Dialog.fontSize = 28;
 
    if (TTF_Init() < 0) {
       printf("error initializing SDL_ttf: %s\n", TTF_GetError());
@@ -118,30 +114,55 @@ void initialize_dialogText(){
    }
 }
 
+/* 
+ * Change Consoles dimensions according to Width and Height of Window
+ * 
+ */
+void update_console(){
+   int console_width =  (int)(0.85 * Width);
+   int console_height = (int)(0.85 * Height);
 
+   // calculate the position of the top-left corner of the rectangle
+   int console_x = (int)((Width - console_width) / 2);
+   int console_y = (int)((Height - console_height) / 2);
+
+   // set console location
+   Dialog.console.x = console_x;     Dialog.console.y = console_y;
+   Dialog.console.w = console_width; Dialog.console.h = console_height;
+}
+
+/*
+ * Main loop of program
+ *
+ */
 void display_driver(){
    SDL_Event event;
    bool running = true;
 
    //draw background
-   SDL_RenderCopy(Renderer,Background,NULL,NULL);
+   SDL_RenderCopy(Main_screen.renderer,Main_screen.background,NULL,NULL);
 
    //draw console
-   SDL_SetRenderDrawColor(Renderer, 30, 30, 30, 140);
-   SDL_RenderFillRect(Renderer, &Dialog.console);
+   SDL_SetRenderDrawColor(Main_screen.renderer, 30, 30, 30, 140);
+   SDL_RenderFillRect(Main_screen.renderer, &Dialog.console);
 
-   //draw text
-   SDL_Surface *text_surface = TTF_RenderText_Blended(Dialog.font, "Hello world!",Dialog.fontColor);
-   SDL_Texture *text_texture = SDL_CreateTextureFromSurface(Renderer,text_surface);
-   SDL_RenderCopy(Renderer,text_texture,NULL,NULL);
+   //Draw Text
+   SDL_CreateTexture(Main_screen.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 640, 480);
+   
+  //XXX 
+   const char* text[] = {"\"...\"","...That's right.","This text display kinda works","If what this says is true then... that means..!"};
+   SDL_Surface* surfaces[3];
 
-   SDL_FreeSurface(text_surface);
-   SDL_DestroyTexture(text_texture);
+   for(int i = 0;i<4;i++){
+      surfaces[i] = TTF_RenderText_Solid(Dialog.font,text[i],(SDL_Color){255,255,255});
+   }
+
+   SDL_Rect dstrect = {Dialog.console.x + 10,Dialog.console.y,surfaces[0]->w,surfaces[0]->h};
+
+   int current_surface = 0;
 
    //Show 
-   SDL_RenderPresent(Renderer);
-
-//   Uint32 lastTick = SDL_GetTicks();
+   SDL_RenderPresent(Main_screen.renderer);
 
    //Main Driver
    while (running){
@@ -149,37 +170,69 @@ void display_driver(){
          if(event.type == SDL_QUIT){
                running = false;
          }
+	 else if(event.type == SDL_KEYDOWN){
+            switch(event.key.keysym.sym){
+	       case SDLK_SPACE:
+	          current_surface++;
+		  if(current_surface >= 4){
+		     current_surface = 0;	  
+		  }
+		  dstrect.w = surfaces[current_surface]->w;
+		  dstrect.h = surfaces[current_surface]->h;
+		  SDL_DestroyTexture(Main_screen.text);
+		  Main_screen.text = SDL_CreateTextureFromSurface(Main_screen.renderer,surfaces[current_surface]);
+                  update_screen();
+SDL_RenderCopy(Main_screen.renderer,Main_screen.text,NULL,&dstrect);
+//Show
+SDL_RenderPresent(Main_screen.renderer);
+
+
+		  break;
+	       default:
+		  break;
+	    }
+	 }
       }
-/*
-      Uint32 curTick = SDL_GetTicks();
-      Uint32 diff = curTick - lastTick;
-      float elapsed = diff / 1000.0f;
-      display_update(elapsed);
-      lastTick = curTick;
-*/
+
+
    }
 }
 
-void display_update(float elapsed){
+void check_keys(SDL_Event event){
+   
 
 
 }
+
+void update_screen(){
+   //Clear Screen
+   SDL_RenderClear(Main_screen.renderer);
+   //Background
+   SDL_RenderCopy(Main_screen.renderer,Main_screen.background,NULL,NULL);
+   //Console
+   SDL_SetRenderDrawColor(Main_screen.renderer, 30, 30, 30, 140);
+   SDL_RenderFillRect(Main_screen.renderer, &Dialog.console); 
+   //Text
+ //  SDL_RenderCopy(Main_screen.renderer,Main_screen.text,NULL,&dstrect);
+   //Show
+   //SDL_RenderPresent(Main_screen.renderer);
+}
+
 
 void display_shutdown(){
-   if(Screen){
-      SDL_FreeSurface(Screen);
+   if(Main_screen.surface){
+      SDL_FreeSurface(Main_screen.surface);
    }
 
-   if(Background){
-      SDL_DestroyTexture(Background);
+   if(Main_screen.background){
+      SDL_DestroyTexture(Main_screen.background);
    }
-   if(Renderer){
-      SDL_DestroyRenderer(Renderer);
+   if(Main_screen.renderer){
+      SDL_DestroyRenderer(Main_screen.renderer);
    }
 
    if(Dialog.font){
       TTF_CloseFont(Dialog.font);
-
    }
 
    if(Window){

@@ -1,7 +1,7 @@
 CC := gcc
 
 CFLAGS = $(shell sdl2-config --cflags) -Wall -Werror -lm
-LDLIBS += -lSDL2 -lSDL2_image -lSDL2_ttf
+LDLIBS += -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_gfx
 
 reader: main.o text.o display.o
 	        $(CC) $(CFLAGS) -o reader main.o text.o display.o $(LDLIBS)
